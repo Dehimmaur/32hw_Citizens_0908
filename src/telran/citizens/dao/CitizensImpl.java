@@ -1,25 +1,20 @@
 package telran.citizens.dao;
 
+import java.util.*;
+
 import telran.citizens.entities.Person;
 
-import java.security.PrivateKey;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+public class CitizensImpl implements Citizens {
 
-public class CitizensImpl implements Citizens{
     private static Comparator<Person> lastNameComparator;
     private static Comparator<Person> ageComparator;
-
-
     static {
-        lastNameComparator = (p1,p2) -> {
+        lastNameComparator = (p1, p2) -> {
             int res = p1.getLastName().compareTo(p2.getLastName());
             return res != 0 ? res : Integer.compare(p1.getId(), p2.getId());
         };
         ageComparator = (p1, p2) -> {
-            int res = Integer.compare(p1.getAge(),p2.getAge());
+            int res = Integer.compare(p1.getAge(), p2.getAge());
             return res != 0 ? res : Integer.compare(p1.getId(), p2.getId());
         };
     }
@@ -36,48 +31,35 @@ public class CitizensImpl implements Citizens{
 
     public CitizensImpl(List<Person> citizens) {
         this();
-        citizens.forEach(p->add(p));
+        citizens.forEach(p -> add(p));
     }
-
-
-
-//    public CitizensImpl(List<Person> idList, List<Person> lastNameList, List<Person> ageList) {
-//        this.idList = idList;
-//        this.lastNameList = lastNameList;
-//        this.ageList = ageList;
-//    }
 
     @Override
     public boolean add(Person person) {
         if (person == null)
             return false;
-        int indexList = Collections.binarySearch(idList, person);
-        if (indexList>=0)
+        int index = Collections.binarySearch(idList, person);
+        if (index >= 0)
             return false;
-        indexList = - indexList - 1;
-        idList.add(indexList, person);
-        int indexLastName = Collections.binarySearch(lastNameList, person, lastNameComparator);
-        if (indexLastName < 0)
-            indexLastName = - indexLastName - 1;
-        int indexAge = Collections.binarySearch(ageList, person, ageComparator);
-        if (indexAge < 0)
-            indexAge = - indexAge - 1;
-
-        lastNameList.add(indexLastName, person);
-        ageList.add(indexAge, person);
-
+        index = -index - 1;
+        idList.add(index, person);
+        index = Collections.binarySearch(ageList, person, ageComparator);
+        index = -index - 1;
+        ageList.add(index, person);
+        index = Collections.binarySearch(lastNameList, person, lastNameComparator);
+        index = -index - 1;
+        lastNameList.add(index, person);
         return true;
     }
-    // TODO add + remove + tests
 
     @Override
     public boolean remove(int id) {
-        Person removePerson = find(id);
-        if (removePerson == null)
+        Person victim = find(id);
+        if (victim == null)
             return false;
-        idList.remove(removePerson);
-        lastNameList.remove(removePerson);
-        ageList.remove(removePerson);
+        idList.remove(victim);
+        ageList.remove(victim);
+        lastNameList.remove(victim);
         return true;
     }
 
@@ -85,36 +67,52 @@ public class CitizensImpl implements Citizens{
     public Person find(int id) {
         Person p = new Person(id, null, null, null);
         int index = Collections.binarySearch(idList, p);
+
         return index < 0 ? null : idList.get(index);
     }
 
     @Override
     public Iterable<Person> find(int minAge, int maxAge) {
-        return null;
+        List<Person> res = new ArrayList<>();
+        for (Person p : ageList) {
+            if (p.getAge() >= minAge && p.getAge() <= maxAge)
+                res.add(p);
+
+        }
+        return res;
     }
 
     @Override
-    public Iterable<Person> find(String lastName) {
-        return null;
+    public Iterable<Person> find(String lastname) {
+        Person p = new Person(Integer.MIN_VALUE, null, lastname, null);
+        int from = -Collections.binarySearch(lastNameList, p, lastNameComparator) - 1;
+        p = new Person(Integer.MAX_VALUE, null, lastname, null);
+        int to = -Collections.binarySearch(lastNameList, p, lastNameComparator) - 1;
+        return lastNameList.subList(from, to);
     }
 
     @Override
     public Iterable<Person> getAllPersonsSortedById() {
-        return null;
+
+        return idList;
     }
 
     @Override
     public Iterable<Person> getAllPersonsSortedByAge() {
-        return null;
+
+        return ageList;
     }
 
     @Override
     public Iterable<Person> getAllPersonsSortedByLastName() {
-        return null;
+
+        return lastNameList;
     }
 
     @Override
     public int size() {
-        return 0;
+
+        return idList.size();
     }
+
 }
